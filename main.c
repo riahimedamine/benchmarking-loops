@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <windows.h> // Add this include
 
 size_t MAX;
 double *A, *B, *C;
@@ -37,12 +38,23 @@ int main(const int argc, char *argv[]) {
         return 1;
     }
 
-    clock_t startTime, endTime;
+    LARGE_INTEGER frequency;
+    if (!QueryPerformanceFrequency(&frequency)) {
+        printf("QueryPerformanceFrequency failed\n");
+        fclose(input);
+        _aligned_free(A);
+        _aligned_free(B);
+        _aligned_free(C);
+        return 1;
+    }
+    const double freq = (double)frequency.QuadPart;
+
+    LARGE_INTEGER startTime, endTime;
     double time;
 
     switch (version) {
         case 1: {
-            startTime = clock();
+            QueryPerformanceCounter(&startTime);
 
             for (int i = 0; i < MAX; ++i) {
                 if (fgets(buffer, sizeof(buffer), input))
@@ -58,13 +70,13 @@ int main(const int argc, char *argv[]) {
                 C[i] = A[i] * B[i];
             }
 
-            endTime = clock();
-            time = (double) (endTime - startTime) / CLOCKS_PER_SEC;
+            QueryPerformanceCounter(&endTime);
+            time = (double)(endTime.QuadPart - startTime.QuadPart) / freq;
             break;
         }
 
         case 2: {
-            startTime = clock();
+            QueryPerformanceCounter(&startTime);
 
             for (int i = 0; i < MAX; ++i) {
                 if (fgets(buffer, sizeof(buffer), input))
@@ -76,13 +88,13 @@ int main(const int argc, char *argv[]) {
                 C[i] = A[i] * B[i];
             }
 
-            endTime = clock();
-            time = (double) (endTime - startTime) / CLOCKS_PER_SEC;
+            QueryPerformanceCounter(&endTime);
+            time = (double)(endTime.QuadPart - startTime.QuadPart) / freq;
             break;
         }
 
         case 3: {
-            startTime = clock();
+            QueryPerformanceCounter(&startTime);
 
             for (int i = 0; i < MAX; ++i) {
                 if (fgets(buffer, sizeof(buffer), input))
@@ -92,8 +104,8 @@ int main(const int argc, char *argv[]) {
                 C[i] = A[i] * B[i];
             }
 
-            endTime = clock();
-            time = (double) (endTime - startTime) / CLOCKS_PER_SEC;
+            QueryPerformanceCounter(&endTime);
+            time = (double)(endTime.QuadPart - startTime.QuadPart) / freq;
             break;
         }
 
@@ -112,13 +124,12 @@ int main(const int argc, char *argv[]) {
     _aligned_free(C);
 
     FILE *output = fopen("D:/Code/Benchmarking/results.csv", "a");
-
     if (!output) {
         printf("Error opening output file\n");
         return 1;
     }
 
-    fprintf(output, "%d,%zu,%f\n", version, MAX, time);
+    fprintf(output, "%d,%zu,%.9f\n", version, MAX, time); // Increased precision
     fclose(output);
 
     return 0;
