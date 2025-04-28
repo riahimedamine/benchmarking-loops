@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <windows.h> // Add this include
+#include <windows.h>
 
 size_t MAX;
 double *A, *B, *C;
